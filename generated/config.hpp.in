@@ -1,0 +1,9 @@
+#pragma once
+
+namespace sklib
+{
+  constexpr auto VERSION_MAJOR = @CMAKE_PROJECT_VERSION_MAJOR@;
+  constexpr auto VERSION_MINOR = @CMAKE_PROJECT_VERSION_MINOR@;
+  constexpr auto VERSION_PATCH = @CMAKE_PROJECT_VERSION_PATCH@;
+  constexpr auto VERSION = "@CMAKE_PROJECT_VERSION@";
+}
