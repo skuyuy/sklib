@@ -46,6 +46,11 @@ namespace sklib::os
 
         std::uint8_t flags = 0; // Bitmask containing `FileDialogOptions::Flags` values
         std::filesystem::path default_path; // Default path option for the file dialog. Ignored if `flags` does not contain `FileDialogOptions::Flags::WithDefaultPath`
+        /* TODO make this a vector of strings: 
+        file_dialog_options opts(file_dialog_options::mask::use_filter);
+        opts.filters = { "*.txt", "*.docx" };
+        open_file(opts);
+        */
         std::string filter; // Filter option for the file dialog. Ignored if `flags` does not contain `FileDialogOptions::Flags::WithFilters`
         std::string title; // Title option for the file dialog. Ignored if `flags` does not contain `FileDialogOptions::Flags::CustomTitle`
 
