@@ -1,5 +1,5 @@
 #include <sklib/os/filesystem.hpp>
-#include <sklib/os/fileoperation.hpp>
+#include <sklib/os/filedialog.hpp>
 #include <sklib/string.hpp>
 
 #include <codecvt>
@@ -14,11 +14,11 @@ namespace sklib::os
     OPENFILENAMEW _create_ofn(const file_dialog_options &options)
     {
         using mask = file_dialog_options::mask;
-    
+
         OPENFILENAMEW ofn;
         WCHAR file[260] = { 0 };
         WCHAR currentDir[256] = { 0 };
-        
+
         ZeroMemory(&ofn, sizeof(OPENFILENAMEW));
         ofn.lStructSize = sizeof(OPENFILENAMEW);
         ofn.lpstrFile = file;
@@ -46,7 +46,7 @@ namespace sklib::os
         OPENFILENAMEA ofn;
         CHAR file[260] = { 0 };
         CHAR currentDir[256] = { 0 };
-        
+
         ZeroMemory(&ofn, sizeof(OPENFILENAMEA));
         ofn.lStructSize = sizeof(OPENFILENAMEA);
         ofn.lpstrFile = file;
@@ -99,7 +99,7 @@ file_dialog_result open_file(const file_dialog_options &options)
         }
         else result.m_result = std::filesystem::path{ofn.lpstrFile};
     }
-#else 
+#else
     if(GetOpenFileNameW(&ofn) != 0)
     {
         if(options.is_flag_set(mask::allow_multiple))
@@ -136,7 +136,7 @@ file_dialog_result save_file(const file_dialog_options &options)
 
 #ifdef UNICODE
     if(GetSaveFileNameW(&ofn) != 0) result.m_result = std::filesystem::path{string::to_string(ofn.lpstrFile)};
-#else 
+#else
     if(GetSaveFileNameA(&ofn) != 0) result.m_result = std::filesystem::path{ofn.lpstrFile};
 #endif
 

@@ -6,5 +6,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(_SKLIB_INCLDIR ${CMAKE_SOURCE_DIR}/include)
 
+add_subdirectory(deps)
 add_subdirectory(generated)
 add_subdirectory(src)

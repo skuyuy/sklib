@@ -16,11 +16,22 @@ set(_SKLIB_MODULE_NAME sklib-${MODULE_NAME})
 
 add_library(${_SKLIB_MODULE_NAME})
 target_sources(${_SKLIB_MODULE_NAME} PRIVATE ${MODULE_SOURCE})
-target_include_directories(${_SKLIB_MODULE_NAME} PUBLIC 
+target_include_directories(${_SKLIB_MODULE_NAME} PUBLIC
     ${_SKLIB_INCLDIR}
     ${CMAKE_BINARY_DIR}
     ${MODULE_INCLUDE})
-target_compile_definitions(${_SKLIB_MODULE_NAME} PUBLIC 
+target_compile_definitions(${_SKLIB_MODULE_NAME} PUBLIC
     MODULE_NAME="${_SKLIB_MODULE_NAME}"
     ${MODULE_DEFINITIONS})
-target_link_libraries(${_SKLIB_MODULE_NAME} PRIVATE ${MODULE_LINK})
+target_link_libraries(${_SKLIB_MODULE_NAME} PUBLIC ${MODULE_LINK})
+
+if(${MODULE_TEST})
+    add_executable(${_SKLIB_MODULE_NAME}_test module_test.cpp)
+    target_link_libraries(${_SKLIB_MODULE_NAME}_test PUBLIC ${_SKLIB_MODULE_NAME} ${MODULE_LINK})
+    target_include_directories(${_SKLIB_MODULE_NAME}_test PUBLIC
+        ${_SKLIB_INCLDIR}
+        ${CMAKE_BINARY_DIR}
+        ${MODULE_INCLUDE})
+    target_compile_definitions(${_SKLIB_MODULE_NAME}_test PUBLIC
+        ${MODULE_DEFINITIONS})
+endif()
