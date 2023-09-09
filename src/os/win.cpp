@@ -150,10 +150,11 @@ struct uuid::impl
     UUID uuid;
 };
 
-uuid::uuid():
+uuid::uuid(bool nil):
     m{std::make_unique<impl>()}
 {
-    UuidCreateNil(&m->uuid);
+    if(nil) UuidCreateNil(&m->uuid);
+    else UuidCreate(&m->uuid);
 }
 
 uuid::uuid(const uuid &other):

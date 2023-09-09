@@ -7,7 +7,7 @@ namespace sklib::os
     class uuid
     {
     public:
-        uuid();
+        explicit uuid(bool nil = false);
         uuid(const uuid &other);
         uuid &operator=(const uuid &other);
         uuid(uuid&&) noexcept = default;
