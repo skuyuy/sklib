@@ -1,11 +1,13 @@
 #include <sklib/os/filesystem.hpp>
 #include <sklib/os/filedialog.hpp>
+#include <sklib/os/uuid.hpp>
 #include <sklib/string.hpp>
 
 #include <codecvt>
 
 // WINDOWS implementation
 #include <Windows.h>
+#pragma comment(lib, "rpcrt4.lib")
 
 namespace sklib::os
 {
@@ -141,6 +143,72 @@ file_dialog_result save_file(const file_dialog_options &options)
 #endif
 
     return result;
+}
+
+struct uuid::impl
+{
+    UUID uuid;
+};
+
+uuid::uuid():
+    m{std::make_unique<impl>()}
+{
+    UuidCreateNil(&m->uuid);
+}
+
+uuid::uuid(const uuid &other):
+    m{std::make_unique<impl>(*other.m)}
+{}
+
+uuid &uuid::operator=(const uuid &other)
+{
+    m = std::make_unique<impl>(*other.m);
+    return *this;
+}
+
+uuid::~uuid() = default;
+
+void uuid::from_string(std::string_view string, uuid &uuid) noexcept
+{
+#ifdef UNICODE
+    auto wstr = string::to_wstring(string.data());
+    auto result = UuidFromStringW((RPC_WSTR) wstr.data(), &uuid.m->uuid);
+#else
+    auto result = UuidFromStringA((RPC_CSTR) string.data(), &uuid.m->uuid);
+#endif
+    _ASSERT_EXPR(result == RPC_S_OK, L"Failed to convert string to UUID");
+}
+
+void uuid::to_string(std::string &string, const uuid &uuid) noexcept
+{
+#ifdef UNICODE
+    using convert_type = std::codecvt_utf8_utf16<wchar_t>;
+    auto sc = std::wstring_convert<convert_type>{};
+
+    // we can assume this returns RPC_S_OK because else the system is just out of memory
+    std::wstring wstr;
+    UuidToStringW(&uuid.m->uuid, (RPC_WSTR*) wstr.data());
+    string = string::to_string(wstr);
+#else
+    UuidToStringA(&uuid.m->uuid, (RPC_CSTR*) string.data());
+#endif
+}
+
+bool uuid::is_nil() const noexcept
+{
+    RPC_STATUS status;
+    return UuidIsNil(&m->uuid, &status);
+}
+
+uuid::operator bool() const noexcept
+{
+    return !is_nil();
+}
+
+bool uuid::operator==(const uuid &other) const noexcept
+{
+    RPC_STATUS status;
+    return UuidEqual(&m->uuid, &other.m->uuid, &status);
 }
 
 }

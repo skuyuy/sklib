@@ -6,7 +6,7 @@
 #include <optional>
 #include <typeinfo>
 
-namespace sklib::os 
+namespace sklib::os
 {
     struct file_dialog_error: public std::domain_error
     {
@@ -16,9 +16,9 @@ namespace sklib::os
     /**
      * @brief Options for calls to native file dialogs
      */
-    struct file_dialog_options 
+    struct file_dialog_options
     {
-        explicit file_dialog_options(std::uint8_t flags):
+        explicit file_dialog_options(std::uint8_t flags = 0):
             flags(flags)
         {}
 
@@ -49,13 +49,15 @@ namespace sklib::os
         std::string filter; // Filter option for the file dialog. Ignored if `flags` does not contain `FileDialogOptions::Flags::WithFilters`
         std::string title; // Title option for the file dialog. Ignored if `flags` does not contain `FileDialogOptions::Flags::CustomTitle`
 
-        inline bool is_flag_set(std::uint8_t flag) const { return flags & flag; }
+        [[nodiscard]] inline bool is_flag_set(std::uint8_t flag) const noexcept { return flags & flag; }
 
-        inline void set_flag(std::uint8_t flag, bool on) 
+        inline void set_flag(std::uint8_t flag, bool on) noexcept
         {
             if(on) flags |= flag;
             else flags &= ~flag;
         }
+
+        inline void clear_flags() noexcept { flags = 0; }
     };
 
     /**
@@ -67,7 +69,7 @@ namespace sklib::os
 
         using result_type = std::variant<
             std::filesystem::path,
-            std::vector<std::filesystem::path>>; 
+            std::vector<std::filesystem::path>>;
 
         template<class T>
         [[nodiscard]] const T &unwrap() const
@@ -114,16 +116,16 @@ namespace sklib::os
 
     /**
      * @brief Opens the native file dialog for opening files
-     * 
-     * @param options Options passed to the file dialog which are translated natively 
-     * @return `FileDialogResult` if the file dialog has been confirmed, `std::nullopt` if canceled 
+     *
+     * @param options Options passed to the file dialog which are translated natively
+     * @return `FileDialogResult` if the file dialog has been confirmed, `std::nullopt` if canceled
      */
-    [[nodiscard]] static file_dialog_result open_file(const file_dialog_options &options);
+    [[nodiscard]] file_dialog_result open_file(const file_dialog_options &options);
     /**
      * @brief Opens the native file dialog for saving files
-     * 
-     * @param options Options passed to the file dialog which are translated natively 
-     * @return `FileDialogResult` if the file dialog has been confirmed, `std::nullopt` if canceled 
+     *
+     * @param options Options passed to the file dialog which are translated natively
+     * @return `FileDialogResult` if the file dialog has been confirmed, `std::nullopt` if canceled
      */
-    [[nodiscard]] static file_dialog_result save_file(const file_dialog_options &options);
+    [[nodiscard]] file_dialog_result save_file(const file_dialog_options &options);
 }
