@@ -26,12 +26,12 @@ namespace sklib::os
         [types addObject: [NSString stringWithUTF8String: options.filter.c_str()]];
 
 
-        [openDlg setAllowedFileTypes: types];
+        [openDlg setAllowedContentTypes: types];
         std::vector<std::filesystem::path> paths;
 
         if ([openDlg runModal] == NSModalResponseOK) {
             for (NSURL* url in [openDlg URLs]) {
-                paths.push_back(std::filesystem::path{(char*) [[url path] UTF8String]});
+                paths.emplace_back(static_cast<const char*>([[url path] UTF8String]));
             }
         }
 

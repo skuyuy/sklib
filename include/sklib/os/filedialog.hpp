@@ -28,6 +28,7 @@ namespace sklib::os
         inline file_dialog_options &operator=(std::uint8_t flags)
         {
             *this = file_dialog_options{flags};
+            return *this;
         }
 
         /**
@@ -101,7 +102,7 @@ namespace sklib::os
         {
             try
             {
-                return get<T>();
+                return unwrap<T>();
             }
             catch(const std::runtime_error&)
             {
@@ -123,12 +124,12 @@ namespace sklib::os
      * @param options Options passed to the file dialog which are translated natively 
      * @return `FileDialogResult` if the file dialog has been confirmed, `std::nullopt` if canceled 
      */
-    [[nodiscard]] static file_dialog_result open_file(const file_dialog_options &options);
+    [[nodiscard]] file_dialog_result open_file(const file_dialog_options &options);
     /**
      * @brief Opens the native file dialog for saving files
      * 
      * @param options Options passed to the file dialog which are translated natively 
      * @return `FileDialogResult` if the file dialog has been confirmed, `std::nullopt` if canceled 
      */
-    [[nodiscard]] static file_dialog_result save_file(const file_dialog_options &options);
+    [[nodiscard]] file_dialog_result save_file(const file_dialog_options &options);
 }
