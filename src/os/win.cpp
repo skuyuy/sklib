@@ -1,11 +1,13 @@
 #include <sklib/os/filesystem.hpp>
-#include <sklib/os/fileoperation.hpp>
+#include <sklib/os/filedialog.hpp>
+#include <sklib/os/uuid.hpp>
 #include <sklib/string.hpp>
 
 #include <codecvt>
 
 // WINDOWS implementation
 #include <Windows.h>
+#pragma comment(lib, "rpcrt4.lib")
 
 namespace sklib::os
 {
@@ -14,11 +16,11 @@ namespace sklib::os
     OPENFILENAMEW _create_ofn(const file_dialog_options &options)
     {
         using mask = file_dialog_options::mask;
-    
+
         OPENFILENAMEW ofn;
         WCHAR file[260] = { 0 };
         WCHAR currentDir[256] = { 0 };
-        
+
         ZeroMemory(&ofn, sizeof(OPENFILENAMEW));
         ofn.lStructSize = sizeof(OPENFILENAMEW);
         ofn.lpstrFile = file;
@@ -46,7 +48,7 @@ namespace sklib::os
         OPENFILENAMEA ofn;
         CHAR file[260] = { 0 };
         CHAR currentDir[256] = { 0 };
-        
+
         ZeroMemory(&ofn, sizeof(OPENFILENAMEA));
         ofn.lStructSize = sizeof(OPENFILENAMEA);
         ofn.lpstrFile = file;
@@ -99,7 +101,7 @@ file_dialog_result open_file(const file_dialog_options &options)
         }
         else result.m_result = std::filesystem::path{ofn.lpstrFile};
     }
-#else 
+#else
     if(GetOpenFileNameW(&ofn) != 0)
     {
         if(options.is_flag_set(mask::allow_multiple))
@@ -136,11 +138,78 @@ file_dialog_result save_file(const file_dialog_options &options)
 
 #ifdef UNICODE
     if(GetSaveFileNameW(&ofn) != 0) result.m_result = std::filesystem::path{string::to_string(ofn.lpstrFile)};
-#else 
+#else
     if(GetSaveFileNameA(&ofn) != 0) result.m_result = std::filesystem::path{ofn.lpstrFile};
 #endif
 
     return result;
+}
+
+struct uuid::impl
+{
+    UUID uuid;
+};
+
+uuid::uuid(bool nil):
+    m{std::make_unique<impl>()}
+{
+    if(nil) UuidCreateNil(&m->uuid);
+    else UuidCreate(&m->uuid);
+}
+
+uuid::uuid(const uuid &other):
+    m{std::make_unique<impl>(*other.m)}
+{}
+
+uuid &uuid::operator=(const uuid &other)
+{
+    m = std::make_unique<impl>(*other.m);
+    return *this;
+}
+
+uuid::~uuid() = default;
+
+void uuid::from_string(std::string_view string, uuid &uuid) noexcept
+{
+#ifdef UNICODE
+    auto wstr = string::to_wstring(string.data());
+    auto result = UuidFromStringW((RPC_WSTR) wstr.data(), &uuid.m->uuid);
+#else
+    auto result = UuidFromStringA((RPC_CSTR) string.data(), &uuid.m->uuid);
+#endif
+    _ASSERT_EXPR(result == RPC_S_OK, L"Failed to convert string to UUID");
+}
+
+void uuid::to_string(std::string &string, const uuid &uuid) noexcept
+{
+#ifdef UNICODE
+    using convert_type = std::codecvt_utf8_utf16<wchar_t>;
+    auto sc = std::wstring_convert<convert_type>{};
+
+    // we can assume this returns RPC_S_OK because else the system is just out of memory
+    std::wstring wstr;
+    UuidToStringW(&uuid.m->uuid, (RPC_WSTR*) wstr.data());
+    string = string::to_string(wstr);
+#else
+    UuidToStringA(&uuid.m->uuid, (RPC_CSTR*) string.data());
+#endif
+}
+
+bool uuid::is_nil() const noexcept
+{
+    RPC_STATUS status;
+    return UuidIsNil(&m->uuid, &status);
+}
+
+uuid::operator bool() const noexcept
+{
+    return !is_nil();
+}
+
+bool uuid::operator==(const uuid &other) const noexcept
+{
+    RPC_STATUS status;
+    return UuidEqual(&m->uuid, &other.m->uuid, &status);
 }
 
 }
