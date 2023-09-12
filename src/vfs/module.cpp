@@ -4,7 +4,6 @@
 #include <unordered_map>
 #include <sstream>
 
-#include <nlohmann/json.hpp>
 #include <generated/config.hpp>
 
 #ifndef SK_VFS_VPATH_SEPERATOR
@@ -14,9 +13,9 @@
 struct _vfs_ctx
 {
 #ifdef SK_VFS_CONFIG_PATH
-    const std::filesystem::path config_path = std::filesystem::path(SK_VFS_CONFIG_PATH) / "vfsconfig.json";
+    const std::filesystem::path config_path = std::filesystem::path(SK_VFS_CONFIG_PATH) / "vfsconfig";
 #else
-    const std::filesystem::path config_path = std::filesystem::current_path() / "vfsconfig.json";
+    const std::filesystem::path config_path = std::filesystem::current_path() / "vfsconfig";
 #endif
     std::unordered_map<std::string, sklib::vfs::node> node_map;
 };
@@ -31,22 +30,25 @@ void sklib::vfs::init()
     std::ifstream ifs(g_vfs_context.config_path, std::ifstream::in);
     if(!ifs.is_open()) throw std::runtime_error("Could not open vfs config file!");
 
-    std::stringstream ss;
-    ss << ifs.rdbuf();
-
-    const auto config = nlohmann::json::parse(ss.str());
-    auto version = config.at("version").get<size_t>();
-
-    if(version != sklib::VERSION_MAJOR) throw std::runtime_error("Major version mismatch in config!");
-
-    for(auto it = config.begin(); it != config.end(); ++it)
+    std::string line;
+    while(std::getline(ifs, line))
     {
-        if(it.key() == "version") continue;
-        else if(!it->is_string()) continue;
+        auto sep = line.find("=");
+        if(sep == std::string::npos) throw std::runtime_error("Could not parse vfs config file");;
 
-        if(g_vfs_context.node_map.find(it.key()) != g_vfs_context.node_map.end()) continue;
+        auto key = line.substr(0, sep);
+        auto val = line.substr(sep + 1);
 
-        g_vfs_context.node_map[it.key()] = node{it->get<std::string>()};
+        if(key == "version")
+        {
+            if(std::stoi(val) != sklib::VERSION_MAJOR) throw std::runtime_error("Major version mismatch in config!");
+            else continue;
+        }
+    	else
+        {
+            if(g_vfs_context.node_map.find(key) != g_vfs_context.node_map.end()) continue;
+            g_vfs_context.node_map[key] = node{val};
+        }
     }
 }
 

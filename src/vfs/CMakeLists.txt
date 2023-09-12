@@ -1,6 +1,5 @@
 set(MODULE_NAME vfs)
 set(MODULE_SOURCE node.cpp module.cpp)
-set(MODULE_LINK nlohmann_json::nlohmann_json)
 set(MODULE_TEST ON)
 
 # add a custom config for vfs which is placed in <root>/res/vfs
